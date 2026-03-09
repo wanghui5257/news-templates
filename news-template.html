@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>晚间新闻摘要 - {{DATE}}</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 40px 20px;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        header {
+            text-align: center;
+            color: white;
+            margin-bottom: 40px;
+        }
+        header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+        .section {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 24px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        .section-title {
+            font-size: 1.5em;
+            color: #2d3436;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 3px solid #667eea;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .section-icon {
+            font-size: 1.3em;
+        }
+        .news-item {
+            padding: 16px 0;
+            border-bottom: 1px solid #eee;
+        }
+        .news-item:last-child {
+            border-bottom: none;
+        }
+        .news-title {
+            font-size: 1.15em;
+            color: #2d3436;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+        .news-title a {
+            color: #667eea;
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+        .news-title a:hover {
+            color: #764ba2;
+            text-decoration: underline;
+        }
+        .news-meta {
+            display: flex;
+            gap: 15px;
+            color: #636e72;
+            font-size: 0.85em;
+            margin-bottom: 8px;
+        }
+        .news-meta span {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .news-description {
+            color: #636e72;
+            line-height: 1.6;
+            font-size: 0.95em;
+        }
+        .hot-badge {
+            background: #ff6b6b;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.75em;
+            margin-left: 8px;
+        }
+        footer {
+            text-align: center;
+            color: white;
+            margin-top: 40px;
+            opacity: 0.8;
+            font-size: 0.9em;
+        }
+        .section-world { border-left: 5px solid #e74c3c; }
+        .section-china { border-left: 5px solid #f1c40f; }
+        .section-ai { border-left: 5px solid #9b59b6; }
+        .section-tech { border-left: 5px solid #3498db; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>📰 晚间新闻摘要</h1>
+            <p>{{DATE}} | {{TIME}} UTC</p>
+        </header>
+        
+        <div class="section section-world">
+            <h2 class="section-title">
+                <span class="section-icon">🌍</span>
+                国际新闻
+            </h2>
+            {{NEWS_WORLD}}
+        </div>
+        
+        <div class="section section-china">
+            <h2 class="section-title">
+                <span class="section-icon">🇨🇳</span>
+                中国新闻
+            </h2>
+            {{NEWS_CHINA}}
+        </div>
+        
+        <div class="section section-ai">
+            <h2 class="section-title">
+                <span class="section-icon">🤖</span>
+                AI 新闻
+            </h2>
+            {{NEWS_AI}}
+        </div>
+        
+        <div class="section section-tech">
+            <h2 class="section-title">
+                <span class="section-icon">📱</span>
+                科技趋势
+            </h2>
+            {{NEWS_TECH}}
+        </div>
+        
+        <footer>
+            <p>HTML 页面由 Walt Wang 的 ai 机器人生成 | 每日早 8 点自动更新</p>
+        </footer>
+    </div>
+</body>
+</html>
