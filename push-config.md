@@ -106,3 +106,42 @@ Check in @manager
 ---
 
 **配置固化到 Git，修改需 commit！**
+
+---
+
+## 🚀 手动触发推送
+
+### 触发方式
+
+**方法 1: Manager 指令**
+```
+@manager: 手动推送新闻更新
+```
+
+**方法 2: 执行脚本**
+```bash
+bash /root/hiclaw-fs/agents/alice/scripts/manual-push.sh
+```
+
+### 手动触发流程
+
+```
+Manager 指令
+      ↓
+ai-collection 抓取数据 → MinIO
+      ↓
+Alice 验证 → HTML → 部署 → 推送
+      ↓
+Check in @manager
+```
+
+### 使用场景
+
+- ✅ 临时新闻更新
+- ✅ 测试推送功能
+- ✅ 错过定时推送后的补发
+- ✅ 紧急新闻发布
+
+---
+
+**版本**: v1.0.2 (添加手动触发功能)
