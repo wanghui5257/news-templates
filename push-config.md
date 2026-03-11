@@ -145,3 +145,42 @@ Check in @manager
 ---
 
 **版本**: v1.0.2 (添加手动触发功能)
+
+---
+
+## 📁 Git 仓库结构
+
+**主模板仓库**: `/root/hiclaw-fs/agents/alice/templates/`
+
+**包含内容**:
+- `news-template.html` - News 页面模板 (v1.0.8)
+- `ecommerce-template.html` - Ecommerce 页面模板 (v1.0.8)
+- `push-config.md` - 推送配置文档 (v1.0.1)
+- `send-notifications.py` - 推送脚本 (v1.0.3)
+- `manual-push.sh` - 手动触发脚本 (v1.0.2)
+
+**版本历史**:
+```
+ff15bab v1.0.3 - 添加推送脚本
+a5a3162 v1.0.2 - 添加手动触发功能
+4a8ca41 v1.0.1 - 添加推送配置文档
+267d4ac 添加模板说明文档
+7e3c9b8 v1.0.8 - 添加标准 HTML 模板
+```
+
+**使用方法**:
+```bash
+# 查看版本历史
+cd /root/hiclaw-fs/agents/alice/templates
+git log --oneline
+
+# 查看当前版本
+git describe --tags
+
+# 回滚到指定版本
+git checkout <version-tag>
+```
+
+---
+
+**版本**: v1.0.4 (整理 Git 仓库结构)
