@@ -37,6 +37,8 @@ def generate_html(eco_md_path, template_path, output_path):
                 current_item = {'title': line.replace('####', '').strip()}
             elif line.startswith('- **信源**:') and current_item:
                 current_item['source'] = line.replace('- **信源**:', '').strip()
+            elif line.startswith('- **来源**:') and current_item:
+                current_item['source'] = line.replace('- **来源**:', '').strip()
             elif line.startswith('- **链接**:') and current_item:
                 current_item['link'] = line.replace('- **链接**:', '').strip()
             elif line.startswith('- **内容摘要**:') and current_item:
@@ -67,10 +69,10 @@ def generate_html(eco_md_path, template_path, output_path):
     html = template
     html = html.replace('{{DATE}}', date_str)
     html = html.replace('{{TIME}}', time_str)
-    html = html.replace('{{NEWS_OFFICIAL}}', ''.join(fmt(i) for i in news_items['official'][:5]))
-    html = html.replace('{{NEWS_COMMUNITY}}', ''.join(fmt(i) for i in news_items['community'][:5]))
-    html = html.replace('{{NEWS_MEDIA}}', ''.join(fmt(i) for i in news_items['media'][:5]))
-    html = html.replace('{{NEWS_KNOWLEDGE}}', ''.join(fmt(i) for i in news_items['knowledge'][:5]))
+    html = html.replace('{{NEWS_OFFICIAL}}', ''.join(fmt(i) for i in news_items['official'][:20]))
+    html = html.replace('{{NEWS_COMMUNITY}}', ''.join(fmt(i) for i in news_items['community'][:20]))
+    html = html.replace('{{NEWS_MEDIA}}', ''.join(fmt(i) for i in news_items['media'][:20]))
+    html = html.replace('{{NEWS_KNOWLEDGE}}', ''.join(fmt(i) for i in news_items['knowledge'][:20]))
     
     os.makedirs(os.path.dirname(output_path), exist_ok=True)
     with open(output_path, 'w', encoding='utf-8') as f:
