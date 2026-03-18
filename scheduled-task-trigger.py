@@ -41,33 +41,107 @@ def fetch_news_data(news_type):
     """抓取新闻数据（news-worker 直接抓取）"""
     log(f"开始抓取 {news_type} 新闻...")
     
-    # 使用统一抓取脚本
-    fetch_script = Path(__file__).parent / "fetch-all-sources.py"
+    # 使用新的抓取脚本
+    if news_type == "ecommerce":
+        # 运行 RSS 抓取
+        fetch_script = Path(__file__).parent / "fetch-amazon-rss.py"
+        if not fetch_script.exists():
+            log(f"抓取脚本不存在：{fetch_script}", "WARN")
+            return None
+        
+        # 执行抓取
+        cmd = ["python3", str(fetch_script), "--output", "/tmp/ecommerce-rss.md"]
+        log("执行 RSS 抓取...")
+        result = subprocess.run(cmd, capture_output=True, text=True, timeout=60)
+        print(result.stdout)
+        if result.returncode != 0:
+            log(f"RSS 抓取失败：{result.stderr}", "ERROR")
+            return None
+        
+        # 运行中文抓取
+        chinese_script = Path(__file__).parent / "fetch-chinese-news.py"
+        if chinese_script.exists():
+            log("执行中文抓取...")
+            # 设置环境变量
+            env = os.environ.copy()
+            config_path = '/root/hiclaw-fs/shared/mcp/tavily-config.json'
+            if os.path.exists(config_path):
+                try:
+                    with open(config_path, 'r', encoding='utf-8') as f:
+                        config = json.load(f)
+                        env['TAVILY_API_KEY'] = config.get('apiKey', '')
+                except:
+                    pass
+            
+            cmd = ["python3", str(chinese_script), "--output", "/tmp/ecommerce-chinese.md"]
+            result = subprocess.run(cmd, capture_output=True, text=True, env=env, timeout=90)
+            print(result.stdout)
+            if result.returncode == 0:
+                log("✅ 中文抓取完成")
+            else:
+                log(f"⚠️ 中文抓取失败：{result.stderr}", "WARN")
+        
+        # 合并两个文件
+        rss_file = Path("/tmp/ecommerce-rss.md")
+        chinese_file = Path("/tmp/ecommerce-chinese.md")
+        
+        if rss_file.exists():
+            # 读取两个文件并合并
+            rss_content = rss_file.read_text(encoding='utf-8')
+            chinese_content = chinese_file.read_text(encoding='utf-8') if chinese_file.exists() else ""
+            
+            # 合并内容（去掉第二个文件的标题行）
+            lines = chinese_content.split('\n')
+            if lines and lines[0].startswith('#'):
+                lines = lines[1:]  # 去掉标题
+                if lines and lines[0].startswith('**'):
+                    lines = lines[1:]  # 去掉抓取时间行
+                if lines and lines[0].startswith('**'):
+                    lines = lines[1:]  # 去掉数据来源行
+                if lines and lines[0] == '':
+                    lines = lines[1:]  # 去掉空行
+            
+            merged_content = rss_content + '\n\n' + '\n'.join(lines)
+            
+            # 保存合并后的文件
+            timestamp = datetime.now().strftime('%Y%m%d-%H%M%S')
+            output_file = Path(f"/tmp/ecommerce-{timestamp}.md")
+            output_file.write_text(merged_content, encoding='utf-8')
+            
+            log(f"✅ 数据抓取完成：{output_file}")
+            return str(output_file)
+        else:
+            log("RSS 文件不存在", "ERROR")
+            return None
     
-    if not fetch_script.exists():
-        log(f"抓取脚本不存在：{fetch_script}", "WARN")
+    else:  # news
+        # 使用原有逻辑
+        fetch_script = Path(__file__).parent / "fetch-all-sources.py"
+        
+        if not fetch_script.exists():
+            log(f"抓取脚本不存在：{fetch_script}", "WARN")
+            return None
+        
+        # 执行抓取
+        cmd = ["python3", str(fetch_script), "--source", "all"]
+        result = subprocess.run(cmd, capture_output=True, text=True)
+        
+        print(result.stdout)
+        if result.returncode != 0:
+            log(f"抓取失败：{result.stderr}", "ERROR")
+            return None
+        
+        # 查找最新抓取的文件
+        output_dir = Path.home() / "news-worker-tmp" / "fetched-data"
+        if output_dir.exists():
+            files = sorted(output_dir.glob(f"{news_type}*.md"))
+            if files:
+                latest_file = files[-1]
+                log(f"抓取成功：{latest_file}")
+                return str(latest_file)
+        
+        log("未找到抓取的文件", "WARN")
         return None
-    
-    # 执行抓取
-    cmd = ["python3", str(fetch_script), "--source", "all"]
-    result = subprocess.run(cmd, capture_output=True, text=True)
-    
-    print(result.stdout)
-    if result.returncode != 0:
-        log(f"抓取失败：{result.stderr}", "ERROR")
-        return None
-    
-    # 查找最新抓取的文件
-    output_dir = Path.home() / "news-worker-tmp" / "fetched-data"
-    if output_dir.exists():
-        files = sorted(output_dir.glob(f"{news_type}*.md"))
-        if files:
-            latest_file = files[-1]
-            log(f"抓取成功：{latest_file}")
-            return str(latest_file)
-    
-    log("未找到抓取的文件", "WARN")
-    return None
 
 
 def check_data_freshness(data_file):
