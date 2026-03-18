@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 from datetime import datetime, timezone, timedelta
-import sys, os
+import sys, os, html
 
 def generate_html(eco_md_path, template_path, output_path):
     with open(template_path, 'r', encoding='utf-8') as f:
@@ -55,15 +55,19 @@ def generate_html(eco_md_path, template_path, output_path):
     time_str = f"{now_shanghai.strftime('%H:%M')} (Asia/Shanghai)"
     
     def fmt(item):
+        # Escape HTML tags in summary to prevent layout breaking
+        summary = html.escape(item.get('summary', 'No description'))
+        title = html.escape(item.get('title', 'Untitled'))
+        source = html.escape(item.get('source', 'Unknown'))
         return f'''<div class="news-item">
                 <div class="news-title">
-                    <a href="{item.get('link','#')}" target="_blank" rel="noopener">{item.get('title','Untitled')}</a>
+                    <a href="{item.get('link','#')}" target="_blank" rel="noopener">{title}</a>
                 </div>
                 <div class="news-meta">
-                    <span>📡 {item.get('source','Unknown')}</span>
+                    <span>📡 {source}</span>
                     <span>🕐 {time_str}</span>
                 </div>
-                <div class="news-description">{item.get('summary','No description')}</div>
+                <div class="news-description">{summary}</div>
             </div>'''
     
     html = template

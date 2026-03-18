@@ -8,6 +8,7 @@ class HTMLValidator:
         self.html_path = Path(html_path)
         self.page_type = page_type
         self.errors = []
+        self.warnings = []
         self.html_content = ""
         self.rules = {
             'news': {'min': 5, 'max': 5, 'cats': ['国际新闻', '中国新闻', 'AI 新闻', '科技趋势']},
@@ -21,6 +22,9 @@ class HTMLValidator:
         
         with open(self.html_path, 'r', encoding='utf-8') as f:
             self.html_content = f.read()
+        
+        # Check for unescaped HTML tags (Reddit comments, etc.)
+        self._check_unescaped_html()
         
         categories = self._extract_categories()
         rules = self.rules.get(self.page_type, {})
@@ -67,11 +71,26 @@ class HTMLValidator:
         
         return categories
     
+    def _check_unescaped_html(self):
+        """Check for unescaped HTML tags that could break page layout"""
+        # Detect Reddit comment tags
+        if '<!-- SC_OFF -->' in self.html_content:
+            self.errors.append("Found unescaped Reddit comment tag: <!-- SC_OFF -->")
+        if '<div class="md">' in self.html_content:
+            self.errors.append("Found unescaped Reddit div tag: <div class=\"md\">")
+        # Detect other potentially problematic HTML tags in content
+        if re.search(r'<!--.*?-->', self.html_content):
+            self.warnings.append("Found HTML comment in content (may be intentional)")
+    
     def get_report(self):
         r = ["=" * 60, f"HTML Validation ({self.page_type})", "=" * 60, f"File: {self.html_path}", ""]
         if self.errors:
             r.append("❌ ERRORS:")
             for e in self.errors: r.append(f"  • {e}")
+            r.append("")
+        if self.warnings:
+            r.append("⚠️ WARNINGS:")
+            for w in self.warnings: r.append(f"  • {w}")
             r.append("")
         if not self.errors:
             cats = self._extract_categories()

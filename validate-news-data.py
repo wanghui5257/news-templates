@@ -17,6 +17,19 @@ def validate_news_data(news_md_path, expected_categories, expected_items_per_cat
     with open(news_md_path, 'r', encoding='utf-8') as f:
         content = f.read()
     
+    # 2b. 检测未转义的 HTML 标签
+    import re
+    html_patterns = [
+        (r'<!--.*?-->', 'HTML comment'),
+        (r'<div[^>]*>', 'HTML div tag'),
+        (r'</div>', 'HTML closing div tag'),
+        (r'<span[^>]*>', 'HTML span tag'),
+        (r'</span>', 'HTML closing span tag'),
+    ]
+    for pattern, desc in html_patterns:
+        if re.search(pattern, content):
+            errors.append(f"⚠️ 检测到 HTML 标签 ({desc}) - 可能需要在生成 HTML 时转义")
+    
     if not content.strip():
         return False, ["❌ 数据文件为空"], []
     

@@ -7,6 +7,7 @@
 import os
 import sys
 import json
+import re
 from datetime import datetime, timezone, timedelta
 from pathlib import Path
 
@@ -114,6 +115,9 @@ def fetch_rss_feed(feed_name, feed_url, limit=2):
                 summary = entry.content[0].value[:200]
             else:
                 summary = 'Click to read more'
+            
+            # 清理 HTML 标签（防止 Reddit 等源的未闭合标签破坏页面布局）
+            summary = re.sub(r'<[^>]+>', '', summary)
             
             # 提取发布时间
             published = 'N/A'
