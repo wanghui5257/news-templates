@@ -29,13 +29,27 @@ def send_telegram(message):
     token = "8393772893:AAGslcXz9ggvvgs4GaADBYfJUPPiFIBcens"
     chat_id = "-5059013183"
     
+    # 限制消息长度 < 4KB
+    if len(message) > 4000:
+        message = message[:3900] + "\n\n... (内容过长，已截断)"
+    
     msg = {"chat_id": chat_id, "text": message, "parse_mode": "HTML"}
     result = subprocess.run([
         'curl', '-s', '-X', 'POST', f"https://api.telegram.org/bot{token}/sendMessage",
         '-H', 'Content-Type: application/json',
         '-d', json.dumps(msg)
     ], capture_output=True, text=True)
-    response = json.loads(result.stdout)
+    
+    # 空响应处理
+    if not result.stdout.strip():
+        print("[WARN] ⚠️ Telegram 返回空响应")
+        return False
+    try:
+        response = json.loads(result.stdout)
+    except json.JSONDecodeError as e:
+        print(f"[WARN] ⚠️ Telegram 响应解析失败：{e}")
+        return False
+    
     if response.get('ok'):
         print("[INFO] ✅ Telegram 通知已发送")
         return True
@@ -48,6 +62,10 @@ def send_dingtalk(message):
     print("[INFO] 发送钉钉通知...")
     webhook = "https://oapi.dingtalk.com/robot/send?access_token=4317cb0dded5bd67acaeefd52e5fb548e62afe60a79d91c7ba8f8097137e7a62"
     secret = "SEC932b78638f3623a2b861b4e4de50e1e5b87f84985f12231aac05cdb4940c7ed1"
+    
+    # 限制消息长度 < 4KB
+    if len(message) > 4000:
+        message = message[:3900] + "\n\n... (内容过长，已截断)"
     
     # 生成签名
     timestamp = str(round(time.time() * 1000))
@@ -67,7 +85,17 @@ def send_dingtalk(message):
         '-H', 'Content-Type: application/json',
         '-d', '@/tmp/dingtalk_msg.json'
     ], capture_output=True, text=True)
-    response = json.loads(result.stdout)
+    
+    # 空响应处理
+    if not result.stdout.strip():
+        print("[WARN] ⚠️ 钉钉返回空响应")
+        return False
+    try:
+        response = json.loads(result.stdout)
+    except json.JSONDecodeError as e:
+        print(f"[WARN] ⚠️ 钉钉响应解析失败：{e}")
+        return False
+    
     if response.get('errcode') == 0:
         print("[INFO] ✅ 钉钉通知已发送")
         return True
@@ -80,6 +108,10 @@ def send_feishu(message):
     print("[INFO] 发送飞书通知...")
     webhook = "https://open.feishu.cn/open-apis/bot/v2/hook/c5d8e91b-cec2-42b1-8b56-92a86936eca0"
     
+    # 限制消息长度 < 4KB
+    if len(message) > 4000:
+        message = message[:3900] + "\n\n... (内容过长，已截断)"
+    
     msg = {"msg_type": "text", "content": {"text": message}}
     with open('/tmp/feishu_msg.json', 'w') as f:
         json.dump(msg, f)
@@ -89,7 +121,17 @@ def send_feishu(message):
         '-H', 'Content-Type: application/json',
         '-d', '@/tmp/feishu_msg.json'
     ], capture_output=True, text=True)
-    response = json.loads(result.stdout)
+    
+    # 空响应处理
+    if not result.stdout.strip():
+        print("[WARN] ⚠️ 飞书返回空响应")
+        return False
+    try:
+        response = json.loads(result.stdout)
+    except json.JSONDecodeError as e:
+        print(f"[WARN] ⚠️ 飞书响应解析失败：{e}")
+        return False
+    
     if response.get('code') == 0 or response.get('StatusCode') == 0:
         print("[INFO] ✅ 飞书通知已发送")
         return True
