@@ -1,0 +1,17 @@
+[Unit]
+Description=news-worker HEARTBEAT Poller
+After=network.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/root/projects/news-templates
+ExecStart=/usr/local/bin/python3 /root/projects/news-templates/scripts/heartbeat-poller.py --interval 300
+Restart=always
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=news-worker-heartbeat
+
+[Install]
+WantedBy=multi-user.target
