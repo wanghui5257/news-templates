@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 from datetime import datetime, timezone, timedelta
-import sys, os, html
+import sys, os
+import html as html_lib
 
 def generate_html(eco_md_path, template_path, output_path):
     with open(template_path, 'r', encoding='utf-8') as f:
@@ -56,9 +57,9 @@ def generate_html(eco_md_path, template_path, output_path):
     
     def fmt(item):
         # Escape HTML tags in summary to prevent layout breaking
-        summary = html.escape(item.get('summary', 'No description'))
-        title = html.escape(item.get('title', 'Untitled'))
-        source = html.escape(item.get('source', 'Unknown'))
+        summary = html_lib.escape(item.get('summary', 'No description'))
+        title = html_lib.escape(item.get('title', 'Untitled'))
+        source = html_lib.escape(item.get('source', 'Unknown'))
         return f'''<div class="news-item">
                 <div class="news-title">
                     <a href="{item.get('link','#')}" target="_blank" rel="noopener">{title}</a>

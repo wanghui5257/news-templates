@@ -12,7 +12,7 @@ from datetime import datetime, timezone, timedelta
 # ECS 配置
 ECS_HOST = "47.115.63.159"
 ECS_USER = "root"
-SSH_KEY = Path.home() / ".ssh/id_ed25519_news_worker"
+SSH_KEY = Path.home() / ".copaw/credentials/ssh/id_ed25519"
 
 # 部署目录
 DEPLOY_DIRS = {
