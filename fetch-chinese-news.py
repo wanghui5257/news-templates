@@ -14,8 +14,29 @@ from datetime import datetime, timezone, timedelta
 from pathlib import Path
 
 
-# 配置 - 中文数据源
+# 配置 - 中文数据源（增强版 - 全中文内容）
 CHINESE_SOURCES = {
+    # 官方媒体（3 个 - Admin 建议新增）
+    '新华网': {
+        'domain': 'xinhuanet.com',
+        'keywords': ['跨境电商', '外贸经济', '一带一路'],
+        'category': '官方发布',
+        'max_results': 3
+    },
+    '人民网': {
+        'domain': 'people.com.cn',
+        'keywords': ['跨境电商', '对外贸易', '经济政策'],
+        'category': '官方发布',
+        'max_results': 3
+    },
+    '央视新闻': {
+        'domain': 'cctv.com',
+        'keywords': ['跨境电商', '外贸', '经济新闻'],
+        'category': '官方发布',
+        'max_results': 3
+    },
+    
+    # 行业媒体（6 个）
     '亿邦动力': {
         'domain': 'ebrun.com',
         'keywords': ['跨境电商', '亚马逊', 'FBA'],
@@ -28,15 +49,67 @@ CHINESE_SOURCES = {
         'category': '行业媒体',
         'max_results': 5
     },
-    '卖家之家': {
-        'domain': 'maijiazhijia.com',
-        'keywords': ['亚马逊', '跨境电商', 'FBA 运营'],
+    'AMZ123': {
+        'domain': 'amz123.com',
+        'keywords': ['跨境电商', '亚马逊运营', '独立站出海'],
+        'category': '行业媒体',
+        'max_results': 5
+    },
+    '白鲸出海': {
+        'domain': 'baijing.cn',
+        'keywords': ['出海', '跨境电商', '泛娱乐出海'],
+        'category': '行业媒体',
+        'max_results': 5
+    },
+    '跨境电商赢商荟': {
+        'domain': 'yingshanghui.com',
+        'keywords': ['跨境电商', '亚马逊', 'TikTok Shop'],
+        'category': '行业媒体',
+        'max_results': 5
+    },
+    '跨境眼': {
+        'domain': 'kjyan.com',
+        'keywords': ['跨境电商', '亚马逊运营', '品牌出海'],
+        'category': '行业媒体',
+        'max_results': 5
+    },
+    
+    # 社区讨论（4 个）
+    '知无不言': {
+        'domain': 'wearesellers.com',
+        'keywords': ['亚马逊运营', '跨境电商', 'FBA'],
+        'category': '社区讨论',
+        'max_results': 5
+    },
+    '创蓝论坛': {
+        'domain': 'chuanglan.com',
+        'keywords': ['亚马逊', '跨境电商卖家', '运营技巧'],
+        'category': '社区讨论',
+        'max_results': 5
+    },
+    
+    # 教程分析（4 个）
+    'Jungle Scout': {
+        'domain': 'junglescout.cn',
+        'keywords': ['跨境电商教程', '亚马逊运营', '卖家工具'],
         'category': '教程分析',
         'max_results': 5
     },
-    '跨境知道': {
-        'domain': 'kjzhidao.com',
-        'keywords': ['跨境电商', '亚马逊', '出口电商'],
+    '跨境学术派': {
+        'domain': 'kuajingxueshu.com',
+        'keywords': ['跨境电商运营', '亚马逊教程', '独立站运营'],
+        'category': '教程分析',
+        'max_results': 5
+    },
+    '卖家成长': {
+        'domain': 'maijiachengzhang.com',
+        'keywords': ['亚马逊运营教程', '跨境电商培训', '卖家成长'],
+        'category': '教程分析',
+        'max_results': 5
+    },
+    '卖家之家': {
+        'domain': 'maijiazhijia.com',
+        'keywords': ['亚马逊', '跨境电商', 'FBA 运营'],
         'category': '教程分析',
         'max_results': 5
     }

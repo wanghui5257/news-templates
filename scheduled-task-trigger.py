@@ -43,28 +43,14 @@ def fetch_news_data(news_type):
     
     # 使用新的抓取脚本
     if news_type == "ecommerce":
-        # 运行 RSS 抓取
-        fetch_script = Path(__file__).parent / "fetch-amazon-rss.py"
-        if not fetch_script.exists():
-            log(f"抓取脚本不存在：{fetch_script}", "WARN")
-            return None
-        
-        # 执行抓取
-        cmd = ["python3", str(fetch_script), "--output", "/tmp/ecommerce-rss.md"]
-        log("执行 RSS 抓取...")
-        result = subprocess.run(cmd, capture_output=True, text=True, timeout=60)
-        print(result.stdout)
-        if result.returncode != 0:
-            log(f"RSS 抓取失败：{result.stderr}", "ERROR")
-            return None
-        
-        # 运行中文抓取
+        # 只运行中文抓取（12 个中文数据源，不要英文 RSS）
+        log("执行 Ecommerce 中文抓取（12 个中文源）...")
         chinese_script = Path(__file__).parent / "fetch-chinese-news.py"
         if chinese_script.exists():
             log("执行中文抓取...")
             # 设置环境变量
             env = os.environ.copy()
-            config_path = '/root/hiclaw-fs/shared/mcp/tavily-config.json'
+            config_path = '/root/.copaw-worker/news-worker/shared/mcp/tavily-config.json'
             if os.path.exists(config_path):
                 try:
                     with open(config_path, 'r', encoding='utf-8') as f:
@@ -81,32 +67,29 @@ def fetch_news_data(news_type):
             else:
                 log(f"⚠️ 中文抓取失败：{result.stderr}", "WARN")
         
-        # 合并两个文件
-        rss_file = Path("/tmp/ecommerce-rss.md")
+        # 只使用中文数据（不要英文 RSS）
         chinese_file = Path("/tmp/ecommerce-chinese.md")
         
-        if rss_file.exists():
-            # 读取两个文件并合并
-            rss_content = rss_file.read_text(encoding='utf-8')
-            chinese_content = chinese_file.read_text(encoding='utf-8') if chinese_file.exists() else ""
-            
-            # 合并内容（去掉第二个文件的标题行）
+        if chinese_file.exists():
+            # 读取中文数据，去掉文件标题
+            chinese_content = chinese_file.read_text(encoding='utf-8')
             lines = chinese_content.split('\n')
-            if lines and lines[0].startswith('#'):
-                lines = lines[1:]  # 去掉标题
-                if lines and lines[0].startswith('**'):
-                    lines = lines[1:]  # 去掉抓取时间行
-                if lines and lines[0].startswith('**'):
-                    lines = lines[1:]  # 去掉数据来源行
-                if lines and lines[0] == '':
-                    lines = lines[1:]  # 去掉空行
+            filtered_lines = []
             
-            merged_content = rss_content + '\n\n' + '\n'.join(lines)
+            for line in lines:
+                # 跳过文件标题行
+                if line.startswith('# 跨境电商新闻 (中文源)'):
+                    continue
+                # 跳过抓取时间和数据来源行
+                if line.startswith('**抓取时间**') or line.startswith('**数据来源**'):
+                    continue
+                # 保留其他行（包括分类标题）
+                filtered_lines.append(line)
             
-            # 保存合并后的文件
+            # 保存纯中文数据
             timestamp = datetime.now().strftime('%Y%m%d-%H%M%S')
             output_file = Path(f"/tmp/ecommerce-{timestamp}.md")
-            output_file.write_text(merged_content, encoding='utf-8')
+            output_file.write_text('\n'.join(filtered_lines), encoding='utf-8')
             
             log(f"✅ 数据抓取完成：{output_file}")
             return str(output_file)
@@ -115,33 +98,41 @@ def fetch_news_data(news_type):
             return None
     
     else:  # news
-        # 使用原有逻辑
-        fetch_script = Path(__file__).parent / "fetch-all-sources.py"
+        # 使用新的 RSS 抓取脚本（全部中文源，无需额外依赖）
+        fetch_script = Path(__file__).parent / "fetch-news-rss.py"
         
         if not fetch_script.exists():
             log(f"抓取脚本不存在：{fetch_script}", "WARN")
             return None
         
         # 执行抓取
-        cmd = ["python3", str(fetch_script), "--source", "all"]
-        result = subprocess.run(cmd, capture_output=True, text=True)
+        timestamp = datetime.now().strftime('%Y%m%d-%H%M%S')
+        output_file = Path(f"/tmp/news-{timestamp}.md")
+        cmd = ["python3", str(fetch_script), "--output", str(output_file)]
+        result = subprocess.run(cmd, capture_output=True, text=True, timeout=120)
         
         print(result.stdout)
         if result.returncode != 0:
             log(f"抓取失败：{result.stderr}", "ERROR")
             return None
         
-        # 查找最新抓取的文件
-        output_dir = Path.home() / "news-worker-tmp" / "fetched-data"
-        if output_dir.exists():
-            files = sorted(output_dir.glob(f"{news_type}*.md"))
-            if files:
-                latest_file = files[-1]
-                log(f"抓取成功：{latest_file}")
-                return str(latest_file)
-        
-        log("未找到抓取的文件", "WARN")
-        return None
+        # 检查输出文件
+        if output_file.exists():
+            log(f"抓取成功：{output_file}")
+            
+            # 推送到 MinIO（供 news-worker-process.py 使用）
+            minio_path = f"shared/news-data/news-{timestamp}.md"
+            push_cmd = ["mc", "cp", str(output_file), f"{MINIO_ALIAS}/{MINIO_BUCKET}/{minio_path}"]
+            push_result = subprocess.run(push_cmd, capture_output=True, text=True)
+            if push_result.returncode == 0:
+                log(f"✅ 已推送到 MinIO: {minio_path}")
+                return minio_path  # 返回 MinIO 路径
+            else:
+                log(f"⚠️ MinIO 推送失败：{push_result.stderr}", "WARN")
+                return str(output_file)  # 返回本地路径
+        else:
+            log("输出文件不存在", "ERROR")
+            return None
 
 
 def check_data_freshness(data_file):
@@ -167,10 +158,20 @@ def process_news(news_type, data_file):
     """调用 news-worker 处理新闻"""
     log(f"开始处理 {news_type} 新闻...")
     
+    # data_file 可能是本地路径或 MinIO 路径
+    # 如果是本地路径，需要转换为 MinIO 路径
+    if data_file.startswith('/'):
+        # 本地路径，提取文件名
+        filename = Path(data_file).name
+        minio_path = f"{NEWS_DATA_DIR}/{filename}"
+    else:
+        # 已经是 MinIO 路径
+        minio_path = data_file
+    
     cmd = [
         "python3", str(WORKER_SCRIPT),
         news_type,
-        f"{NEWS_DATA_DIR}/{data_file}",
+        minio_path,
         f"{NEWS_HTML_DIR}/"
     ]
     
@@ -185,9 +186,10 @@ def process_news(news_type, data_file):
 
 
 def send_manager_notification(success, news_type, message=""):
-    """发送通知给 Manager（通过矩阵消息或日志）"""
+    """发送通知给 Manager + 多渠道推送（Telegram + 钉钉 + 飞书）"""
     timestamp = get_shanghai_time().strftime("%Y-%m-%d %H:%M")
     
+    # 1. 记录日志
     if success:
         notification = f"""
 ✅ 定时任务执行成功
@@ -213,8 +215,25 @@ def send_manager_notification(success, news_type, message=""):
     log(notification)
     log("=" * 60)
     
-    # 实际场景中，这里应该调用 Matrix API 发送消息
-    # 目前先记录到日志
+    # 2. 实际推送：调用 send-notifications.py
+    if success:
+        log("📱 执行多渠道推送...")
+        push_script = Path(__file__).parent / "send-notifications.py"
+        if push_script.exists():
+            push_result = subprocess.run(
+                ["python3", str(push_script)],
+                capture_output=True,
+                text=True,
+                timeout=30
+            )
+            print(push_result.stdout)
+            if push_result.returncode == 0:
+                log("✅ 推送通知已发送（Telegram + 钉钉 + 飞书）")
+            else:
+                log(f"⚠️ 推送失败：{push_result.stderr}", "WARN")
+        else:
+            log(f"⚠️ 推送脚本不存在：{push_script}", "WARN")
+    
     return notification
 
 

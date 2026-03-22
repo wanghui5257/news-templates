@@ -18,19 +18,17 @@ WORK_DIR = Path.home() / "news-worker-tmp"
 NEWS_CATEGORIES = ["国际新闻", "中国新闻", "AI 新闻", "科技趋势"]
 ECOMMERCE_CATEGORIES = ["官方发布", "社区讨论", "行业媒体", "教程分析"]
 
-# 脚本路径
-NEWS_TEMPLATES_DIR = Path.home() / "projects" / "news-templates"
-VALIDATE_NEWS_SCRIPT = NEWS_TEMPLATES_DIR / "validate-news-data.py"
-VALIDATE_HTML_SCRIPT = NEWS_TEMPLATES_DIR / "validate-html.py"
-GENERATE_ECOMMERCE_SCRIPT = NEWS_TEMPLATES_DIR / "generate-ecommerce-html.py"
-SEND_NOTIFICATIONS_SCRIPT = NEWS_TEMPLATES_DIR / "send-notifications.py"
-
-# news-worker 技能脚本路径
+# news-worker 技能脚本路径（所有脚本在同一目录）
 SKILL_SCRIPTS_DIR = Path(__file__).parent
+VALIDATE_NEWS_SCRIPT = SKILL_SCRIPTS_DIR / "validate-news-sources.py"
+VALIDATE_HTML_SCRIPT = SKILL_SCRIPTS_DIR / "validate-html.py"
+GENERATE_ECOMMERCE_SCRIPT = SKILL_SCRIPTS_DIR / "generate-ecommerce-html.py"
 GENERATE_NEWS_SCRIPT = SKILL_SCRIPTS_DIR / "generate-news-html.py"
+SEND_NOTIFICATIONS_SCRIPT = SKILL_SCRIPTS_DIR / "send-notifications.py"
 DEPLOY_TO_ECS_SCRIPT = SKILL_SCRIPTS_DIR / "deploy-to-ecs.py"
 
-# 模板路径
+# 模板路径（从 MinIO 同步到本地）
+NEWS_TEMPLATES_DIR = SKILL_SCRIPTS_DIR / "templates"
 NEWS_TEMPLATE = NEWS_TEMPLATES_DIR / "news-template.html"
 ECOMMERCE_TEMPLATE = NEWS_TEMPLATES_DIR / "ecommerce-template.html"
 
@@ -56,6 +54,10 @@ class NewsWorker:
     
     def pull_from_minio(self, minio_path, local_path):
         """从 MinIO 拉取文件"""
+        # 移除 minio_path 开头的 '/' 避免双斜杠
+        if minio_path.startswith('/'):
+            minio_path = minio_path.lstrip('/')
+        
         self.log("INFO", f"从 MinIO 拉取：{minio_path} → {local_path}")
         
         cmd = ["mc", "cp", f"{MINIO_ALIAS}/{MINIO_BUCKET}/{minio_path}", str(local_path)]
